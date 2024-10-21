@@ -1,6 +1,6 @@
-import { User } from '../../entities/user.entity';
+import { user } from '../../entities/user.entity';
 
-export type Iuser = User
+export type Iuser = user;
 export type Ruser = {
-  name : string
-}
+  name: string;
+};

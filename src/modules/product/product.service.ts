@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { Product } from '../../entities/product.entity';
-import { AppDataSource } from '../../datasource/data-source';
+import { product } from '../../entities/product.entity';
+// import { AppDataSource } from '../../datasource/data-source';
+import { IProcuctFunctionParam } from './product.interface';
+import { ICreateProduct, RProduct } from './product.type';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
-export class ProductService {
-  async addProduct(product: Product) {
-    const productRepository = AppDataSource.getRepository(Product);
-    const currentProduct = await productRepository.findOneBy({ productName: product.productName });
+export class ProductService implements IProcuctFunctionParam {
+  constructor(
+    @InjectRepository(product)
+    private productRepository: Repository<product>,
+  ) {}
+
+  async createProduct(params: ICreateProduct): Promise<RProduct> {
+    const currentProduct = await this.productRepository.findOneBy({
+      productName: params.productName,
+    });
     if (!currentProduct) {
-      const insertProduct = productRepository.create(
-        product,
-      );
-      await productRepository.save(insertProduct);
+      const insertProduct = this.productRepository.create(params);
+      await this.productRepository.save(insertProduct);
       return insertProduct;
     } else {
       return 'Duplicate product';

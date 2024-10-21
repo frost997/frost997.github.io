@@ -1,10 +1,13 @@
-import {Entity, Column, ObjectId, ObjectIdColumn,PrimaryGeneratedColumn} from 'typeorm';
-import { User } from './user.entity';
-
-
+import {
+  Entity,
+  Column,
+  ObjectId,
+  ObjectIdColumn,
+  // PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
-export class Product {
+export class product {
   @ObjectIdColumn()
   _id: ObjectId;
 
@@ -17,22 +20,30 @@ export class Product {
   @Column()
   quantity: number;
 
-  @Column({nullable: true})
-  saleCoupon?: string;
+  @Column({ nullable: true })
+  saleCoupon?: number;
 
   // This relation can be used to find associated ProductUser entities
-  productUsers: {
-    user: User,
-    ownedQuantities: number,
-    contributed: number
+  // @ManyToOne(() => User) // Defining the reference to User
+  productUser: {
+    userID: ObjectId;
+    userName: string;
+    ownedQuantities: number;
+    contributed: number;
   }[];
 
-  constructor(_id: ObjectId, productName: string,total: number , quantity: number, saleCoupon?: string) {
+  constructor(
+    _id: ObjectId,
+    productName: string,
+    total: number,
+    quantity: number,
+    saleCoupon?: number,
+  ) {
     this._id = _id;
     this.productName = productName;
-    this.total = total
+    this.total = total;
     this.quantity = quantity;
     this.saleCoupon = saleCoupon;
-    this.productUsers = [];
+    this.productUser = [];
   }
 }

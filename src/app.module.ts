@@ -2,19 +2,21 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {Product} from './entities/product.entity';
-import {User} from './entities/user.entity';
+import { product } from './entities/product.entity';
+import { user } from './entities/user.entity';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mongodb',
-      url: "mongodb+srv://Kelvin:bXrSixPBlxZRVmo4@taphoa.mdtds.mongodb.net/?retryWrites=true&w=majority&appName=TapHoa",
+      url: 'mongodb+srv://Kelvin:bXrSixPBlxZRVmo4@taphoa.mdtds.mongodb.net/?retryWrites=true&w=majority&appName=TapHoa',
       synchronize: true,
       logging: true,
-      entities: [Product, User],
+      entities: [product, user],
     }),
-    TypeOrmModule.forFeature( [Product,User]), // Register for DI in services
+    TypeOrmModule.forFeature([product, user]), // Register for DI in services
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],
