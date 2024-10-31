@@ -25,6 +25,7 @@ export class product {
 
   // This relation can be used to find associated ProductUser entities
   // @ManyToOne(() => User) // Defining the reference to User
+  @Column()
   productUser: {
     userID: ObjectId;
     userName: string;
