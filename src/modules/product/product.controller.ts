@@ -1,6 +1,12 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { createProduct, getProduct, updateProduct } from './product.dto';
+import { UserService } from '../user/user.service';
+import {
+  createProduct,
+  getProduct,
+  updateProduct,
+  createProductUser,
+} from './product.dto';
 
 @Controller('product')
 export class ProductController {
@@ -18,16 +24,21 @@ export class ProductController {
     return this.productService.updateProduct(params);
   }
 
-  @Get(':id')
-  getProduct(@Param('id') id: string) {
-    return this.productService.getProduct(id);
+  @Get(':params')
+  getProduct(@Param() query: getProduct) {
+    const { params } = query;
+    if (params) {
+      return this.productService.getProduct(params);
+    }
+    return [];
   }
 
-  // @Post('createProductUser')
-  // createProductUser(@Body() createProductUser: createProductUser) {
-  //   const { params } = createProductUser;
-  //   return this.productService.createProductUser(params);
-  // }
+  @Post('createProductUser')
+  createProductUser(@Body() createProductUser: createProductUser) {
+    const { params } = createProductUser;
+    return this.productService.createProductUser(params);
+  }
+
   //
   // @Post('updateProductUser')
   // updateProductUser(@Body() updateProductUser: createProductUser) {

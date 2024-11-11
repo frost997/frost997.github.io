@@ -6,11 +6,12 @@ import { product } from './entities/product.entity';
 import { user } from './entities/user.entity';
 import { ProductModule } from './modules/product/product.module';
 
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mongodb',
-      url: 'mongodb+srv://Kelvin:bXrSixPBlxZRVmo4@taphoa.mdtds.mongodb.net/?retryWrites=true&w=majority&appName=TapHoa',
+      url: process.env.MONGO_URL,
       synchronize: true,
       logging: true,
       entities: [product, user],

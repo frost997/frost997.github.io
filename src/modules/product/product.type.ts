@@ -12,6 +12,7 @@ export type IUpdateProduct = ICreateProduct;
 export type ISearchProducts = string;
 
 export type ICreateProductUser = {
+  productName: string;
   userName: string;
   ownedQuantities: number;
   contributed: number;
@@ -19,6 +20,9 @@ export type ICreateProductUser = {
 
 export type IUpdateProductUser = ICreateProductUser;
 
-export type RProduct = product | string;
+export type RProduct = {
+  data: product | product[];
+  err: string;
+};
 
 export type RProductUser = string;

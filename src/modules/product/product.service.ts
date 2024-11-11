@@ -5,10 +5,12 @@ import { product } from '../../entities/product.entity';
 // import { IProductFunctionParam } from './product.interface';
 import {
   ICreateProduct,
+  ICreateProductUser,
   ISearchProducts,
   // ICreateProductUser,
   // IUpdateProductUser,
   RProduct,
+  RProductUser,
   // RProductUser,
 } from './product.type';
 import { MongoRepository } from 'typeorm';
@@ -25,54 +27,67 @@ export class ProductService {
   ) {}
 
   async createProduct(params: ICreateProduct): Promise<RProduct> {
-    const currentProduct = await this.productRepository.findOneBy({
-      productName: params.productName,
-    });
+    const { data: currentProduct } = await this.getCurrentProduct([
+      params.productName,
+    ]);
     if (!currentProduct) {
       const insertProduct = this.productRepository.create(params);
       await this.productRepository.save(insertProduct);
-      return insertProduct;
+      return { data: insertProduct, err: '' };
     } else {
-      return 'Duplicate product';
+      return { data: null, err: 'Duplicate product' };
     }
   }
 
   async updateProduct(params: ICreateProduct): Promise<RProduct> {
-    const currentProduct = await this.productRepository.findOneBy({
-      productName: params.productName,
-    });
+    const currentProduct = await this.getCurrentProduct([params.productName]);
     if (currentProduct) {
-      params['_id'] = currentProduct._id;
+      params['_id'] = currentProduct[0]._id;
       const insertProduct = this.productRepository.create(params);
       await this.productRepository.save(insertProduct);
-      return insertProduct;
+      return { data: insertProduct, err: '' };
     } else {
-      return 'Product not found';
+      return { data: null, err: 'Product not found' };
     }
   }
 
-  async getProduct(params: ISearchProducts): Promise<RProduct[]> {
-    const search = params;
+  async getProduct(params: ISearchProducts): Promise<RProduct> {
     const currentProduct = await this.productRepository.find({
       where: {
-        $or: [{ productName: search }, { 'productUser.userName': search }],
+        $or: [{ productName: params }, { 'productUser.userName': params }],
       },
     });
-
-    console.log(currentProduct);
-
-    return currentProduct;
+    return { data: currentProduct, err: '' };
   }
 
   //
-  // async createProductUser(params: ICreateProductUser): Promise<RProductUser> {
-  //   const currentUserList = params.map((user) => user.userName);
-  //   const availableUserList = await this.userRepository.find({ userName: currentUserList });
-  //   //add logic check and only insert new product user which exist in user table
-  //   return;
-  // }
-  //
-  // async updateProductUser(params: IUpdateProductUser): Promise<RProductUser> {
-  //   return;
-  // }
+  async createProductUser(params: ICreateProductUser): Promise<RProductUser> {
+    const currentProductNames = params.map((product) => product.productName);
+    const currentProduct = await this.getCurrentProduct(currentProductNames);
+    if (currentProduct) {
+      const currentUserList = params.map((user) => user.userName);
+      const checkCurrentUser = currentProduct[0].productUser.filter((user) =>
+        currentUserList.includes(user.userName),
+      );
+      if (checkCurrentUser?.length) {
+        const errMessage = `User ${checkCurrentUser.join(',')} already exists`;
+        return errMessage;
+      }
+      currentProduct[0].productUser.push(...params);
+      const insertProductUser = this.productRepository.create(
+        currentProduct[0],
+      );
+      await this.productRepository.save(insertProductUser);
+    }
+    //add logic check and only insert new product user which exist in user table
+  }
+
+  private async getCurrentProduct(params: string[]): Promise<RProduct> {
+    const currentProduct = await this.productRepository.findOneBy({
+      where: {
+        productName: params,
+      },
+    });
+    return { data: currentProduct, err: '' };
+  }
 }
