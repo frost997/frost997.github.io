@@ -1,92 +1,100 @@
 import { Injectable } from '@nestjs/common';
-import { product } from '../../entities/product.entity';
-// import { user } from '../../entities/user.entity';
-// import { AppDataSource } from '../../datasource/data-source';
-// import { IProductFunctionParam } from './product.interface';
-import {
-  ICreateProduct,
-  ICreateProductUser,
-  ISearchProducts,
-  // ICreateProductUser,
-  // IUpdateProductUser,
-  RProduct,
-  RProductUser,
-  // RProductUser,
-} from './product.type';
+import { ProductEntity } from '../../entities/product/product.entity';
+import { ICreateProduct, IGetProducts, RProduct } from './product.type';
 import { MongoRepository } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PriceHistory } from '../../entities/product/price-history.entity';
+import { Util } from '../../helper/util';
+import { IProductFunctionParam } from './product.interface';
 
 @Injectable()
-export class ProductService {
+export class ProductService implements IProductFunctionParam {
   constructor(
     //look at this before continue
-    @InjectRepository(product)
-    private productRepository: MongoRepository<product>,
-    // @InjectRepository(user)
-    // private userRepository: Repository<user>,
+    @InjectRepository(ProductEntity)
+    private productRepository: MongoRepository<ProductEntity>,
   ) {}
 
-  async createProduct(params: ICreateProduct): Promise<RProduct> {
-    const { data: currentProduct } = await this.getCurrentProduct([
-      params.productName,
-    ]);
-    if (!currentProduct) {
-      const insertProduct = this.productRepository.create(params);
+  private util = new Util();
+
+  async createProduct(params: ICreateProduct[]): Promise<RProduct> {
+    const productName = params.map((prod: ICreateProduct) => prod.productName);
+    const { data: currentProduct } = await this.getProduct({
+      keys: productName[0],
+      queryValue: 'productName',
+    });
+
+    if (!currentProduct || currentProduct.length == 0) {
+      const insertProduct = params.map((product) => {
+        const historyObjectID = new ObjectId();
+        product.historyID = historyObjectID;
+        product.createdAt = new Date();
+        product.modifiedAt = new Date();
+        const total_cost = product.price * product.on_hand;
+        product.priceHistories = [
+          new PriceHistory(
+            product.createdAt,
+            total_cost,
+            product.on_hand,
+            historyObjectID,
+          ),
+        ];
+        return this.productRepository.create(product);
+      });
       await this.productRepository.save(insertProduct);
+      console.log(insertProduct);
       return { data: insertProduct, err: '' };
     } else {
       return { data: null, err: 'Duplicate product' };
     }
   }
 
-  async updateProduct(params: ICreateProduct): Promise<RProduct> {
-    const currentProduct = await this.getCurrentProduct([params.productName]);
-    if (currentProduct) {
-      params['_id'] = currentProduct[0]._id;
-      const insertProduct = this.productRepository.create(params);
-      await this.productRepository.save(insertProduct);
-      return { data: insertProduct, err: '' };
+  async updateProduct(params: ICreateProduct[]): Promise<RProduct> {
+    const updateProduct = [];
+    for (let index: number = 0; index < params.length; index++) {
+      const { data: currentProduct } = await this.getProduct({
+        keys: params[index].productName,
+        queryValue: 'productName',
+      });
+      if (currentProduct && currentProduct.length) {
+        currentProduct[0].createdAt = new Date();
+        currentProduct[0].modifiedAt = new Date();
+        const historyObjectID = new ObjectId();
+        const total_cost = params[index].price * params[index].on_hand;
+        currentProduct[0].priceHistories.push(
+          new PriceHistory(
+            currentProduct[0].createdAt,
+            total_cost,
+            params[index].on_hand,
+            historyObjectID,
+          ),
+        );
+        currentProduct[0].price =
+          (currentProduct[0].price * currentProduct[0].on_hand +
+            params[index].price * params[index].on_hand) /
+          (currentProduct[0].on_hand + params[index].on_hand);
+        currentProduct[0].price = Math.ceil(currentProduct[0].price);
+        currentProduct[0].on_hand += params[index].on_hand;
+        // const currentUpdateProduct = this.productRepository.create(params);
+        const currentUpdateProduct = await this.productRepository.save(
+          currentProduct[0],
+        );
+        updateProduct.push(currentUpdateProduct);
+      }
+    }
+    if (updateProduct.length) {
+      return { data: updateProduct, err: '' };
     } else {
       return { data: null, err: 'Product not found' };
     }
   }
 
-  async getProduct(params: ISearchProducts): Promise<RProduct> {
+  async getProduct(params: IGetProducts): Promise<RProduct> {
+    const { queryValue, keys } = params;
+    const where = { [`${keys}`]: { ['$in']: [queryValue] } };
     const currentProduct = await this.productRepository.find({
-      where: {
-        $or: [{ productName: params }, { 'productUser.userName': params }],
-      },
-    });
-    return { data: currentProduct, err: '' };
-  }
-
-  //
-  async createProductUser(params: ICreateProductUser): Promise<RProductUser> {
-    const currentProductNames = params.map((product) => product.productName);
-    const currentProduct = await this.getCurrentProduct(currentProductNames);
-    if (currentProduct) {
-      const currentUserList = params.map((user) => user.userName);
-      const checkCurrentUser = currentProduct[0].productUser.filter((user) =>
-        currentUserList.includes(user.userName),
-      );
-      if (checkCurrentUser?.length) {
-        const errMessage = `User ${checkCurrentUser.join(',')} already exists`;
-        return errMessage;
-      }
-      currentProduct[0].productUser.push(...params);
-      const insertProductUser = this.productRepository.create(
-        currentProduct[0],
-      );
-      await this.productRepository.save(insertProductUser);
-    }
-    //add logic check and only insert new product user which exist in user table
-  }
-
-  private async getCurrentProduct(params: string[]): Promise<RProduct> {
-    const currentProduct = await this.productRepository.findOneBy({
-      where: {
-        productName: params,
-      },
+      where,
     });
     return { data: currentProduct, err: '' };
   }

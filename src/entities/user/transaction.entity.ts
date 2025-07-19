@@ -7,44 +7,45 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class product {
+export class TransactionEntity {
   @ObjectIdColumn()
   _id: ObjectId;
+
+  @ObjectIdColumn()
+  productID: ObjectId;
+
+  @ObjectIdColumn()
+  userID: ObjectId;
 
   @Column()
   productName: string;
 
   @Column()
-  total: number;
+  userName: string;
 
   @Column()
   quantity: number;
 
-  @Column({ nullable: true })
-  saleCoupon?: number;
-
+  @Column()
+  total: number;
   // This relation can be used to find associated ProductUser entities
   // @ManyToOne(() => User) // Defining the reference to User
-  @Column()
-  productUser: {
-    userID: ObjectId;
-    userName: string;
-    ownedQuantities: number;
-    contributed: number;
-  }[];
 
   constructor(
     _id: ObjectId,
+    productID: ObjectId,
+    userID: ObjectId,
     productName: string,
-    total: number,
+    userName: string,
     quantity: number,
-    saleCoupon?: number,
+    total: number,
   ) {
     this._id = _id;
+    this.productID = productID;
+    this.userID = userID;
     this.productName = productName;
-    this.total = total;
+    this.userName = userName;
     this.quantity = quantity;
-    this.saleCoupon = saleCoupon;
-    this.productUser = [];
+    this.total = total;
   }
 }

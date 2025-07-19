@@ -1,48 +1,43 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { UserService } from '../user/user.service';
 import {
   createProduct,
   getProduct,
   updateProduct,
-  createProductUser,
+  // createProductUser,
 } from './product.dto';
 
-@Controller('product')
+@Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Post('createProduct')
-  createProduct(@Body() createProduct: createProduct) {
+  //
+  @Post()
+  async createProduct(@Body() createProduct: createProduct) {
     const { params } = createProduct;
-    return this.productService.createProduct(params);
+    return await this.productService.createProduct(params);
   }
 
-  @Post('updateProduct')
-  updateProduct(@Body() updateProduct: updateProduct) {
+  @Patch(':productName')
+  async updateProduct(
+    @Body() updateProduct: updateProduct,
+    @Param('productName') productName: string,
+  ) {
     const { params } = updateProduct;
-    return this.productService.updateProduct(params);
+    return await this.productService.updateProduct([
+      { ...params, productName },
+    ]);
   }
 
   @Get(':params')
-  getProduct(@Param() query: getProduct) {
+  async getProduct(@Param() query: getProduct) {
     const { params } = query;
     if (params) {
-      return this.productService.getProduct(params);
+      return await this.productService.getProduct({
+        queryValue: params,
+        keys: 'productName',
+      });
     }
     return [];
   }
-
-  @Post('createProductUser')
-  createProductUser(@Body() createProductUser: createProductUser) {
-    const { params } = createProductUser;
-    return this.productService.createProductUser(params);
-  }
-
-  //
-  // @Post('updateProductUser')
-  // updateProductUser(@Body() updateProductUser: createProductUser) {
-  //   const { params } = updateProductUser;
-  //   return this.productService.updateProductUser(params);
-  // }
 }

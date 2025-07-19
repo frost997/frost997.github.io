@@ -7,7 +7,7 @@ import {
 } from './product.type';
 
 export class createProduct {
-  params: ICreateProduct;
+  params: ICreateProduct[];
 }
 
 export class updateProduct {
