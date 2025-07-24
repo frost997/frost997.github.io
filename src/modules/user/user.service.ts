@@ -4,15 +4,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { IUpdateUserService, RUser } from './user.type';
-import { DataSource, EntityTarget, QueryRunner } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { IUserFunctionParam } from './user.interface';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
-import { UserEntity } from '../../entities/user/user.entity';
 import { ObjectId } from 'mongodb';
 import { ProductEntity } from '../../entities/product/product.entity';
 import { TransactionEntity } from '../../entities/user/transaction.entity';
 import { ProductUserEntity } from '../../entities/user/productUser.entity';
+import { UserProcessHelper } from './user-process.helper';
 
 @Injectable()
 export class UserService implements IUserFunctionParam {
@@ -24,70 +22,39 @@ export class UserService implements IUserFunctionParam {
   async updateUser(params: IUpdateUserService): Promise<RUser> {
     const { userName, userID, productUser } = params;
 
-    const exitMapPRDUser = new Map<string, any>();
-    const validProductIds = new Map<string, any>();
     const objectUserId = new ObjectId(userID);
-    const productDataSource: MongoRepository<ProductEntity> =
-      this.getMongoRepository<ProductEntity>({
-        dataSource: this.dataSource,
-        entity: ProductEntity,
-      });
-    const userDataSource: MongoRepository<UserEntity> =
-      this.getMongoRepository<UserEntity>({
-        dataSource: this.dataSource,
-        entity: UserEntity,
-      });
-    const transactionDataSource: MongoRepository<TransactionEntity> =
-      this.getMongoRepository<TransactionEntity>({
-        dataSource: this.dataSource,
-        entity: TransactionEntity,
-      });
-    const productUserDataSource: MongoRepository<ProductUserEntity> =
-      this.getMongoRepository<ProductUserEntity>({
-        dataSource: this.dataSource,
-        entity: ProductUserEntity,
-      });
 
     const updateProducts = [];
     const updateTransaction = [];
     const updateProductUsers = [];
+    const userProcessHelper = new UserProcessHelper(this.dataSource);
 
-    try {
-      await this.checkUser({ userDataSource, userName, objectUserId });
-    } catch (error) {
-      throw new BadRequestException(`${error.message}`);
-    }
-
+    const {
+      productDataSource,
+      productUserDataSource,
+      transactionDataSource,
+      userDataSource,
+    } = userProcessHelper.getUpdateUserDataSource();
     const updateProductIDs = productUser.map(
       (prdUser) => new ObjectId(prdUser.productID),
     );
-
-    let existingProducts: ProductEntity[];
-    try {
-      existingProducts = await this.checkProduct({
-        productDataSource,
-        updateProductIDs,
-      });
-    } catch (error) {
-      throw new BadRequestException(`${error.message}`);
+    {
     }
-    for (let i = 0; i < existingProducts?.length; i++) {
-      const { _id } = existingProducts[i];
-      validProductIds.set(_id.toString(), { ...existingProducts[i] });
-    }
-
-    const PRDUsers = await productUserDataSource.find({
-      where: { productID: { $in: updateProductIDs }, userID: objectUserId },
+    const existingProducts = await userProcessHelper.validateProductAndUser({
+      userDataSource,
+      productDataSource,
+      userName,
+      objectUserId,
+      updateProductIDs,
     });
 
-    if (PRDUsers?.length) {
-      for (let i = 0; i < PRDUsers?.length; i++) {
-        const { productID: prdID, quantity, _id: prdUserID } = PRDUsers[i];
-        if (quantity > 0) {
-          exitMapPRDUser.set(prdID.toString(), { prdUserID, quantity });
-        }
-      }
-    }
+    const { validProductIds, exitMapPRDUser } =
+      await userProcessHelper.prepProductAndUser({
+        productUserDataSource,
+        objectUserId,
+        updateProductIDs,
+        existingProducts,
+      });
     const invalidProduct = [];
     for (let prdI = 0; prdI < productUser?.length; prdI++) {
       // eslint-disable-next-line prefer-const
@@ -208,45 +175,5 @@ export class UserService implements IUserFunctionParam {
       data: { userName, productUser: updateProductUsers },
       err: null,
     };
-  }
-
-  private getMongoRepository<T>(params: {
-    dataSource: DataSource;
-    entity: EntityTarget<T>; // constructor type
-  }): MongoRepository<T> {
-    const { dataSource, entity } = params;
-    return dataSource.getMongoRepository<T>(entity);
-  }
-
-  private async checkUser({ userDataSource, userName, objectUserId }) {
-    const user = await userDataSource.findOne({
-      where: { _id: objectUserId },
-    });
-    if (!user) {
-      throw new UnauthorizedException();
-    }
-    if ([null, undefined, ''].includes(userName)) {
-      throw new Error('must input something to update');
-    }
-
-    if (![null, undefined, ''].includes(userName)) {
-      user.userName = userName;
-    }
-  }
-
-  private async checkProduct({
-    productDataSource,
-    updateProductIDs,
-  }): Promise<ProductEntity[]> {
-    const existingProducts = await productDataSource.find({
-      where: { _id: { $in: updateProductIDs } },
-    });
-
-    if (!existingProducts?.length) {
-      throw new BadRequestException(
-        'unable to find valid product or current product is out of stock',
-      );
-    }
-    return existingProducts;
   }
 }
