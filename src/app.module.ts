@@ -9,6 +9,7 @@ import { UserEntity } from './entities/user/user.entity';
 import { UserModule } from './modules/user/user.module';
 import { TransactionEntity } from './entities/user/transaction.entity';
 import { ProductUserEntity } from './entities/user/productUser.entity';
+import { DataSource } from 'typeorm';
 
 // import { TransactionModule } from './modules/transaction/transaction.module';
 
@@ -40,4 +41,6 @@ import { ProductUserEntity } from './entities/user/productUser.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private dataSource: DataSource) {} // Inject DataSource if needed
+}

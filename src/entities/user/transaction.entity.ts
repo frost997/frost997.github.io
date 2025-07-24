@@ -11,11 +11,14 @@ export class TransactionEntity {
   @ObjectIdColumn()
   _id: ObjectId;
 
-  @ObjectIdColumn()
+  @ObjectIdColumn({ name: 'productID' })
   productID: ObjectId;
 
-  @ObjectIdColumn()
+  @ObjectIdColumn({ name: 'userID' })
   userID: ObjectId;
+
+  @Column()
+  action: string;
 
   @Column()
   productName: string;
@@ -35,6 +38,7 @@ export class TransactionEntity {
     _id: ObjectId,
     productID: ObjectId,
     userID: ObjectId,
+    action: string,
     productName: string,
     userName: string,
     quantity: number,
@@ -43,6 +47,7 @@ export class TransactionEntity {
     this._id = _id;
     this.productID = productID;
     this.userID = userID;
+    this.action = action;
     this.productName = productName;
     this.userName = userName;
     this.quantity = quantity;

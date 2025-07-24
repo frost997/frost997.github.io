@@ -11,10 +11,10 @@ export class ProductUserEntity {
   @ObjectIdColumn()
   _id: ObjectId;
 
-  @ObjectIdColumn()
+  @ObjectIdColumn({ name: 'productID' })
   productID: ObjectId;
 
-  @ObjectIdColumn()
+  @ObjectIdColumn({ name: 'userID' })
   userID: ObjectId;
 
   @Column()
