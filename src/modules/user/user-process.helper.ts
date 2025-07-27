@@ -1,10 +1,11 @@
-import { DataSource, EntityTarget, MongoRepository } from 'typeorm';
+import { DataSource, MongoRepository } from 'typeorm';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ProductEntity } from '../../entities/product/product.entity';
 import { UserEntity } from '../../entities/user/user.entity';
 import { TransactionEntity } from '../../entities/user/transaction.entity';
 import { ProductUserEntity } from '../../entities/user/productUser.entity';
 import { ObjectId } from 'mongodb';
+import { getMongoRepositoryData } from '../../helper/util';
 
 export class UserProcessHelper {
   private readonly dataSource: DataSource;
@@ -15,22 +16,22 @@ export class UserProcessHelper {
 
   public getUpdateUserDataSource() {
     const productDataSource: MongoRepository<ProductEntity> =
-      this.getMongoRepository<ProductEntity>({
+      getMongoRepositoryData<ProductEntity>({
         dataSource: this.dataSource,
         entity: ProductEntity,
       });
     const userDataSource: MongoRepository<UserEntity> =
-      this.getMongoRepository<UserEntity>({
+      getMongoRepositoryData<UserEntity>({
         dataSource: this.dataSource,
         entity: UserEntity,
       });
     const transactionDataSource: MongoRepository<TransactionEntity> =
-      this.getMongoRepository<TransactionEntity>({
+      getMongoRepositoryData<TransactionEntity>({
         dataSource: this.dataSource,
         entity: TransactionEntity,
       });
     const productUserDataSource: MongoRepository<ProductUserEntity> =
-      this.getMongoRepository<ProductUserEntity>({
+      getMongoRepositoryData<ProductUserEntity>({
         dataSource: this.dataSource,
         entity: ProductUserEntity,
       });
@@ -99,12 +100,119 @@ export class UserProcessHelper {
     return { validProductIds, exitMapPRDUser };
   }
 
-  private getMongoRepository<T>(params: {
-    dataSource: DataSource;
-    entity: EntityTarget<T>; // constructor type
-  }): MongoRepository<T> {
-    const { dataSource, entity } = params;
-    return dataSource.getMongoRepository<T>(entity);
+  public createUpdateProductUser({
+    productUser,
+    validProductIds,
+    objectUserId,
+    userName,
+    exitMapPRDUser,
+  }) {
+    const invalidProduct = [];
+    const updateProducts = [];
+    const updateTransaction = [];
+    const updateProductUsers = [];
+    for (const { productID, quantity } of productUser) {
+      // eslint-disable-next-line prefer-const
+      const product = validProductIds.get(productID);
+      if (!product) {
+        invalidProduct.push({
+          productID,
+          tag: 'product',
+          errorMessage: `Can not find productID ${productID}.`,
+        });
+        continue;
+      }
+      if (!product.on_hand || product.on_hand <= 0) {
+        invalidProduct.push({
+          productID,
+          tag: 'product',
+          errorMessage: `Current product is out of stock.`,
+        });
+        continue;
+      }
+      const { productName, price } = product;
+      let insertProduct = {};
+      if (quantity > 0) {
+        product.on_hand -= quantity;
+        if (product.on_hand < 0) {
+          invalidProduct.push(productID);
+          continue;
+        }
+        updateProducts.push(product);
+        updateTransaction.push({
+          userName,
+          userID: objectUserId,
+          productID: new ObjectId(productID),
+          productName: productName,
+          action: 'purchase',
+          quantity,
+          total: quantity * price,
+        });
+      } else if (
+        quantity < 0 &&
+        exitMapPRDUser?.size &&
+        exitMapPRDUser.get(productID)
+      ) {
+        updateTransaction.push({
+          userName,
+          userID: objectUserId,
+          productID: new ObjectId(productID),
+          productName: productName,
+          action: 'take',
+          quantity,
+          total: 0,
+        });
+      }
+
+      if (exitMapPRDUser?.size && exitMapPRDUser.get(productID)) {
+        // eslint-disable-next-line prefer-const
+        let { prdUserID, quantity: existQuantity } =
+          exitMapPRDUser.get(productID);
+
+        existQuantity += quantity;
+        if (existQuantity < 0) {
+          invalidProduct.push({
+            productID,
+            tag: 'user',
+            errorMessage: `Insufficient stock to proceed.`,
+          });
+          continue;
+        } else {
+          insertProduct = {
+            userID: objectUserId,
+            productID: new ObjectId(productID),
+            productName: productName,
+            quantity: existQuantity,
+            _id: prdUserID,
+          };
+        }
+      } else if (quantity >= 0) {
+        insertProduct = {
+          userID: objectUserId,
+          productID: new ObjectId(productID),
+          productName: productName,
+          quantity,
+        };
+      }
+      if (insertProduct) {
+        updateProductUsers.push(insertProduct);
+      }
+    }
+    if (invalidProduct?.length) {
+      return {
+        updateProductUsers: null,
+        updateTransaction: null,
+        updateProducts: null,
+        invalidProduct,
+      };
+    } else {
+      return {
+        updateProductUsers,
+        updateTransaction,
+        updateProducts,
+        invalidProduct: null,
+      };
+    }
   }
 
   private async checkUser({ userDataSource, userName, objectUserId }) {

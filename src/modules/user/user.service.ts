@@ -1,174 +1,114 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { IUpdateUserService, RUser } from './user.type';
-import { DataSource, QueryRunner } from 'typeorm';
+import { DataSource, MongoRepository, QueryRunner } from 'typeorm';
 import { IUserFunctionParam } from './user.interface';
 import { ObjectId } from 'mongodb';
 import { ProductEntity } from '../../entities/product/product.entity';
 import { TransactionEntity } from '../../entities/user/transaction.entity';
 import { ProductUserEntity } from '../../entities/user/productUser.entity';
 import { UserProcessHelper } from './user-process.helper';
+import { synchronizeUpdate } from '../../helper/util';
+import { UserEntity } from '../../entities/user/user.entity';
 
 @Injectable()
 export class UserService implements IUserFunctionParam {
-  constructor(
-    //look at this before continue
-    private dataSource: DataSource,
-  ) {}
+  private dataSource: DataSource;
+  private productDataSource: MongoRepository<ProductEntity>;
+  private productUserDataSource: MongoRepository<ProductUserEntity>;
+  private transactionDataSource: MongoRepository<TransactionEntity>;
+  private userDataSource: MongoRepository<UserEntity>;
+  private userProcessHelper: UserProcessHelper;
+
+  init() {
+    this.userProcessHelper = new UserProcessHelper(this.dataSource);
+    const entity = this.userProcessHelper.getUpdateUserDataSource();
+    this.productDataSource = entity.productDataSource;
+    this.productUserDataSource = entity.productUserDataSource;
+    this.transactionDataSource = entity.transactionDataSource;
+    this.userDataSource = entity.userDataSource;
+  }
 
   async updateUser(params: IUpdateUserService): Promise<RUser> {
     const { userName, userID, productUser } = params;
-
+    if (!productUser?.length || !userID) {
+      throw new BadRequestException(
+        `Missing user's essential information, please check again`,
+      );
+    }
     const objectUserId = new ObjectId(userID);
 
-    const updateProducts = [];
-    const updateTransaction = [];
-    const updateProductUsers = [];
-    const userProcessHelper = new UserProcessHelper(this.dataSource);
-
-    const {
-      productDataSource,
-      productUserDataSource,
-      transactionDataSource,
-      userDataSource,
-    } = userProcessHelper.getUpdateUserDataSource();
     const updateProductIDs = productUser.map(
       (prdUser) => new ObjectId(prdUser.productID),
     );
-    {
-    }
-    const existingProducts = await userProcessHelper.validateProductAndUser({
-      userDataSource,
-      productDataSource,
-      userName,
-      objectUserId,
-      updateProductIDs,
-    });
+    const existingProducts =
+      await this.userProcessHelper.validateProductAndUser({
+        userDataSource: this.userDataSource,
+        productDataSource: this.productDataSource,
+        userName,
+        objectUserId,
+        updateProductIDs,
+      });
 
     const { validProductIds, exitMapPRDUser } =
-      await userProcessHelper.prepProductAndUser({
-        productUserDataSource,
+      await this.userProcessHelper.prepProductAndUser({
+        productUserDataSource: this.productUserDataSource,
         objectUserId,
         updateProductIDs,
         existingProducts,
       });
-    const invalidProduct = [];
-    for (let prdI = 0; prdI < productUser?.length; prdI++) {
-      // eslint-disable-next-line prefer-const
-      let { productID, quantity } = productUser[prdI];
-      const checkValdProd = validProductIds.get(productID);
-      if (!checkValdProd) {
-        invalidProduct.push(productID);
-        continue;
-      }
-      if (!checkValdProd.on_hand && checkValdProd.on_hand <= 0) {
-        invalidProduct.push(productID);
-        continue;
-      }
-      const { productName, price } = checkValdProd;
-      let insertProduct = {};
-      if (quantity > 0) {
-        checkValdProd.on_hand -= quantity;
-        if (checkValdProd.on_hand < 0) {
-          invalidProduct.push(productID);
-          continue;
-        }
-        updateProducts.push(checkValdProd);
-        updateTransaction.push({
-          userName,
-          userID: objectUserId,
-          productID: new ObjectId(productID),
-          productName: productName,
-          action: 'purchase',
-          quantity,
-          total: quantity * price,
-        });
-      } else if (
-        quantity < 0 &&
-        exitMapPRDUser?.size &&
-        exitMapPRDUser.get(productID)
-      ) {
-        updateTransaction.push({
-          userName,
-          userID: objectUserId,
-          productID: new ObjectId(productID),
-          productName: productName,
-          action: 'take',
-          quantity,
-          total: 0,
-        });
-      }
 
-      if (exitMapPRDUser?.size && exitMapPRDUser.get(productID)) {
-        // eslint-disable-next-line prefer-const
-        let { prdUserID, quantity: existQuantity } =
-          exitMapPRDUser.get(productID);
+    const {
+      updateTransaction,
+      updateProducts,
+      updateProductUsers,
+      invalidProduct,
+    } = this.userProcessHelper.createUpdateProductUser({
+      productUser,
+      validProductIds,
+      objectUserId,
+      userName,
+      exitMapPRDUser,
+    });
 
-        existQuantity += quantity;
-        if (existQuantity < 0) {
-          existQuantity = 0;
-        }
-
-        if (existQuantity >= 0) {
-          insertProduct = {
-            userID: objectUserId,
-            productID: new ObjectId(productID),
-            productName: productName,
-            quantity: existQuantity,
-            _id: prdUserID,
-          };
-          updateProductUsers.push(insertProduct);
-        }
-      } else if (quantity >= 0) {
-        insertProduct = {
-          userID: objectUserId,
-          productID: new ObjectId(productID),
-          productName: productName,
-          quantity,
-        };
-        updateProductUsers.push(insertProduct);
-      }
+    if (invalidProduct?.length) {
+      const errorMessage = invalidProduct.map(
+        (invPrd: any) => `${invPrd.tag} - ${invPrd.errorMessage}`,
+      );
+      throw new BadRequestException(errorMessage);
+    }
+    const promises = [];
+    if (updateProducts?.length) {
+      const currentProduct = this.productUserDataSource.create(updateProducts);
+      promises.push({
+        entity: ProductEntity,
+        data: currentProduct,
+        action: 'save',
+      });
     }
 
-    const queryRunner: QueryRunner = this.dataSource.createQueryRunner(); // Create a new QueryRunner
-    await queryRunner.connect(); // Establish a connection
-    await queryRunner.startTransaction(); // Start a transaction
-    const promiseUser = [];
+    if (updateProductUsers?.length) {
+      const currentProductUser =
+        this.productUserDataSource.create(updateProductUsers);
+      promises.push({
+        entity: ProductUserEntity,
+        data: currentProductUser,
+        action: 'save',
+      });
+    }
+
+    if (updateTransaction?.length) {
+      const currentUpdateTransaction =
+        this.transactionDataSource.create(updateTransaction);
+      promises.push({
+        entity: TransactionEntity,
+        data: currentUpdateTransaction,
+        action: 'save',
+      });
+    }
     try {
-      if (updateProductUsers?.length) {
-        const currentProductUser =
-          productUserDataSource.create(updateProductUsers);
-        promiseUser.push(
-          queryRunner.manager.save(ProductUserEntity, currentProductUser),
-        );
-      }
-
-      if (updateTransaction?.length) {
-        const currentUpdateTransaction =
-          transactionDataSource.create(updateTransaction);
-        promiseUser.push(
-          queryRunner.manager.save(TransactionEntity, currentUpdateTransaction),
-        );
-      }
-
-      if (updateProducts?.length) {
-        const currentUpdateProduct = productDataSource.create(updateProducts);
-        promiseUser.push(
-          queryRunner.manager.save(ProductEntity, currentUpdateProduct),
-        );
-      }
-      if (promiseUser.length) {
-        await Promise.all(promiseUser);
-      }
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw new BadRequestException(`${err.message}`);
-    } finally {
-      await queryRunner.release();
+      await synchronizeUpdate({ dataSource: this.dataSource, promises });
+    } catch (error) {
+      throw new BadRequestException(`${error.message}`);
     }
 
     return {

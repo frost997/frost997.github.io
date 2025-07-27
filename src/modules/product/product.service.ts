@@ -5,7 +5,6 @@ import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PriceHistory } from '../../entities/product/price-history.entity';
-import { Util } from '../../helper/util';
 import { IProductFunctionParam } from './product.interface';
 
 @Injectable()
@@ -15,8 +14,6 @@ export class ProductService implements IProductFunctionParam {
     @InjectRepository(ProductEntity)
     private productRepository: MongoRepository<ProductEntity>,
   ) {}
-
-  private util = new Util();
 
   async createProduct(params: ICreateProduct[]): Promise<RProduct> {
     const productName = params.map((prod: ICreateProduct) => prod.productName);
@@ -28,22 +25,23 @@ export class ProductService implements IProductFunctionParam {
     if (!currentProduct || currentProduct.length == 0) {
       const insertProduct = params.map((product) => {
         const historyObjectID = new ObjectId();
-        product.historyID = historyObjectID;
-        product.createdAt = new Date();
-        product.modifiedAt = new Date();
         const total_cost = product.price * product.on_hand;
-        product.priceHistories = [
-          new PriceHistory(
-            product.createdAt,
-            total_cost,
-            product.on_hand,
-            historyObjectID,
-          ),
-        ];
-        return this.productRepository.create(product);
+        const insProd = {
+          historyID: historyObjectID,
+          createdAt: new Date(),
+          modifiedAt: new Date(),
+          priceHistories: [
+            new PriceHistory(
+              new Date(),
+              total_cost,
+              product.on_hand,
+              historyObjectID,
+            ),
+          ],
+        };
+        return this.productRepository.create(insProd);
       });
       await this.productRepository.save(insertProduct);
-      console.log(insertProduct);
       return { data: insertProduct, err: '' };
     } else {
       return { data: null, err: 'Duplicate product' };

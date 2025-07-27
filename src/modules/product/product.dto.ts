@@ -1,29 +1,26 @@
-import {
-  ICreateProduct,
-  ICreateProductUser,
-  ISearchProducts,
-  IUpdateProduct,
-  IUpdateProductUser,
-} from './product.type';
+import { ISearchProducts } from './product.type';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class createProduct {
-  params: ICreateProduct[];
+abstract class baseProduct {
+  @IsString()
+  @IsNotEmpty()
+  productName: string;
+  @IsString()
+  @IsNotEmpty()
+  price: number;
+  @IsNumber()
+  @IsNotEmpty()
+  on_hand: number;
+  @IsNumber()
+  saleCoupon?: number;
 }
 
-export class updateProduct {
-  params: IUpdateProduct;
-}
+export class createProduct extends baseProduct {}
+
+export class updateProduct extends baseProduct {}
 
 export class getProduct {
   params: ISearchProducts;
-}
-
-export class createProductUser {
-  params: ICreateProductUser;
-}
-
-export class updateProductUser {
-  params: IUpdateProductUser;
 }
 
 // export class deleteProduct {

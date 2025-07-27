@@ -14,8 +14,7 @@ export class ProductController {
   //
   @Post()
   async createProduct(@Body() createProduct: createProduct) {
-    const { params } = createProduct;
-    return await this.productService.createProduct(params);
+    return await this.productService.createProduct([createProduct]);
   }
 
   @Patch(':productName')
@@ -23,9 +22,8 @@ export class ProductController {
     @Body() updateProduct: updateProduct,
     @Param('productName') productName: string,
   ) {
-    const { params } = updateProduct;
     return await this.productService.updateProduct([
-      { ...params, productName },
+      { ...updateProduct, productName },
     ]);
   }
 

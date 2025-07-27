@@ -3,7 +3,6 @@ import {
   Body,
   Get,
   Param,
-  Patch,
   Request,
   UseGuards,
   Put,
@@ -20,13 +19,14 @@ export class UserController {
   // @UseGuards(JwtAuthGuard)
   @Put(':userID')
   async updateUser(
-    // @Request() request: any,
+    @Request() request: any,
     @Body() updateUser: updateUser,
     @Param('userID') userID: string,
   ) {
-    // if (userID !== request._id) {
-    //   throw new UnauthorizedException('Miss match userID');
-    // }
+    if (userID !== request._id) {
+      throw new UnauthorizedException('Miss match userID');
+    }
+    this.userService.init();
     const { userName, productUser } = updateUser;
     return await this.userService.updateUser({ userName, productUser, userID });
   }
