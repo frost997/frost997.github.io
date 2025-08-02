@@ -81,12 +81,17 @@ export class AuthService {
 
   async validateUser(payload: any) {
     const objectId = new ObjectId(payload.sub);
-    const user = await this.userRepository.findOne({
+    const user: UserEntity = await this.userRepository.findOne({
       where: { _id: objectId },
     });
     if (!user) {
       throw new UnauthorizedException();
     }
-    return user;
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      userName: user.userName,
+      roles: user.roles,
+    };
   }
 }

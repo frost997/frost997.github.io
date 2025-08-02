@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put(':userID')
   async updateUser(
     @Request() request: any,

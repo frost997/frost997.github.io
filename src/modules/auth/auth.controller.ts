@@ -9,6 +9,8 @@ import {
 import { LoginDto, SignUpDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './JWT/JWT-AuthGuard';
+import { RolesAuthGuard } from './Roles/roles-AuthGuard';
+import { Roles } from './Roles/role.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -24,11 +26,12 @@ export class AuthController {
     return await this.authService.login(loginDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesAuthGuard)
   @Get('profile')
+  @Roles(['ADMIN'])
   getProfile(@Request() request: any) {
     return {
-      id: request.user._id,
+      id: request.user.id,
       email: request.user.email,
       userName: request.user.userName,
     };

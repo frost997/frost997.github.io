@@ -10,6 +10,8 @@ import { UserModule } from './modules/user/user.module';
 import { TransactionEntity } from './entities/user/transaction.entity';
 import { ProductUserEntity } from './entities/user/productUser.entity';
 import { DataSource } from 'typeorm';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
 
 // import { TransactionModule } from './modules/transaction/transaction.module';
 
