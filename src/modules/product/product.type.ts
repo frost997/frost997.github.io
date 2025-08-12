@@ -7,11 +7,16 @@ export type ICreateProduct = {
   saleCoupon?: number;
 };
 
-export type IUpdateProduct = ICreateProduct;
+export type IUpdateProduct = {
+  productID: string;
+  price: number;
+  on_hand: number;
+  saleCoupon?: number;
+};
 
 export type ISearchProducts = string;
 
-export type IGetProducts = { queryValue: string; keys: string };
+export type IGetProducts = { queryValue: any; keys: any };
 
 export type RProduct = {
   data: ProductEntity[];

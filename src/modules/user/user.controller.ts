@@ -11,19 +11,21 @@ import {
 import { UserService } from './user.service';
 import { updateUser } from './user.dto';
 import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
+import { RolesAuthGuard } from '../auth/role/roles-AuthGuard';
+import { Roles } from '../auth/Roles/role.decorator';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesAuthGuard)
   @Put(':userID')
   async updateUser(
     @Request() request: any,
     @Body() updateUser: updateUser,
     @Param('userID') userID: string,
   ) {
-    if (userID !== request._id) {
+    if (userID !== request.user.id.toString()) {
       throw new UnauthorizedException('Miss match userID');
     }
     this.userService.init();

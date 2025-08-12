@@ -13,7 +13,6 @@ export interface IProductFunctionParam {
   getProduct(params: IGetProducts): Promise<RProduct>;
 }
 
-
 // export class deleteProduct {
 //   params: IProduct;
 // }

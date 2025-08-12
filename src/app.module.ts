@@ -41,7 +41,13 @@ import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
     // TransactionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: RolesAuthGuard,
+    },
+    AppService,
+  ],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {} // Inject DataSource if needed

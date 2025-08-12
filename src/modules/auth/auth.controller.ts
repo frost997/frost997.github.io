@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './JWT/JWT-AuthGuard';
 import { RolesAuthGuard } from './Roles/roles-AuthGuard';
 import { Roles } from './Roles/role.decorator';
+import { roles } from '../../common/constant';
 
 @Controller('auth')
 export class AuthController {
@@ -28,7 +29,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard, RolesAuthGuard)
   @Get('profile')
-  @Roles(['ADMIN'])
+  @Roles([roles.ADMIN])
   getProfile(@Request() request: any) {
     return {
       id: request.user.id,

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { IUpdateUserService, RUser } from './user.type';
-import { DataSource, MongoRepository, QueryRunner } from 'typeorm';
+import { DataSource, MongoRepository } from 'typeorm';
 import { IUserFunctionParam } from './user.interface';
 import { ObjectId } from 'mongodb';
 import { ProductEntity } from '../../entities/product/product.entity';
@@ -12,12 +12,19 @@ import { UserEntity } from '../../entities/user/user.entity';
 
 @Injectable()
 export class UserService implements IUserFunctionParam {
-  private dataSource: DataSource;
   private productDataSource: MongoRepository<ProductEntity>;
   private productUserDataSource: MongoRepository<ProductUserEntity>;
   private transactionDataSource: MongoRepository<TransactionEntity>;
   private userDataSource: MongoRepository<UserEntity>;
   private userProcessHelper: UserProcessHelper;
+  private readonly dataSource: DataSource;
+
+  constructor(
+    dataSource: DataSource,
+    //look at this before continue
+  ) {
+    this.dataSource = dataSource;
+  }
 
   init() {
     this.userProcessHelper = new UserProcessHelper(this.dataSource);
