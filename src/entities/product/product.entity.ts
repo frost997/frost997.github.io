@@ -35,6 +35,9 @@ export class ProductEntity {
   on_hand: number;
 
   @Column()
+  imageURL: string;
+
+  @Column()
   priceHistories: PriceHistory[];
 
   @Column({ nullable: true })
@@ -42,20 +45,20 @@ export class ProductEntity {
 
   constructor(
     _id: ObjectId,
+    price: number,
+    on_hand: number,
     createdAt: Date,
     modifiedAt: Date,
     productName: string,
-    price: number,
-    on_hand: number,
     priceHistory: PriceHistory[],
     saleCoupon?: number,
   ) {
     this._id = _id;
+    this.price = price;
+    this.on_hand = on_hand;
     this.createdAt = createdAt;
     this.modifiedAt = modifiedAt;
     this.productName = productName;
-    this.price = price;
-    this.on_hand = on_hand;
     this.priceHistories = priceHistory;
     this.saleCoupon = saleCoupon ? saleCoupon : undefined;
   }

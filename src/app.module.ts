@@ -14,6 +14,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
 
 // import { TransactionModule } from './modules/transaction/transaction.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
     ProductModule,
     AuthModule,
     UserModule,
+    CartModule,
     // TransactionModule,
   ],
   controllers: [AppController],
