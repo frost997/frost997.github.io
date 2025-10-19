@@ -10,6 +10,11 @@ export type IUpdateUserController = {
   productUser: productUser[];
 };
 
+export type IGetUserController = {
+  userID: string;
+  userName: string;
+};
+
 export type productUser = {
   productID: string;
   quantity: number;
