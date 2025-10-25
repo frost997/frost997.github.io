@@ -5,6 +5,9 @@ abstract class baseProduct {
   @IsString()
   @IsNotEmpty()
   productName: string;
+  @IsString()
+  @IsNotEmpty()
+  imageUrl: string;
   @IsNumber()
   @IsNotEmpty()
   price: number;

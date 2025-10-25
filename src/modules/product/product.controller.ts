@@ -27,9 +27,9 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesAuthGuard)
   @Roles([roles.ADMIN])
   @Post()
-  async createProduct(@Body() createProduct: createProduct) {
+  async createProduct(@Body() createProduct: createProduct[]) {
     this.productService.init();
-    return await this.productService.createProduct([createProduct]);
+    return await this.productService.createProduct(createProduct);
   }
 
   @UseGuards(JwtAuthGuard, RolesAuthGuard)

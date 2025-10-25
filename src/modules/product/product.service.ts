@@ -43,6 +43,10 @@ export class ProductService implements IProductFunctionParam {
           historyID: historyObjectID,
           createdAt: new Date(),
           modifiedAt: new Date(),
+          productName: product.productName,
+          price: product.price,
+          on_hand: product.on_hand,
+          imageURL: product.imageUrl,
           priceHistories: [
             new PriceHistory(
               new Date(),
