@@ -17,7 +17,7 @@ export type IUpdateProduct = {
 
 export type ISearchProducts = string;
 
-export type IGetProducts = { queryValue: any; keys: any };
+export type IGetProducts = { queryValue: any; keys: any; skip: number };
 
 export type RProduct = {
   data: ProductEntity[];

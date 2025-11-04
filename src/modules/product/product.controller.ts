@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import {
@@ -28,7 +29,6 @@ export class ProductController {
   @Roles([roles.ADMIN])
   @Post()
   async createProduct(@Body() createProduct: createProduct[]) {
-    this.productService.init();
     return await this.productService.createProduct(createProduct);
   }
 
@@ -44,17 +44,21 @@ export class ProductController {
     ]);
   }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
-  @Roles([roles.ADMIN])
-  @Get(':params')
-  async getProduct(@Param() query: getProduct) {
-    const { params } = query;
-    if (params) {
-      return await this.productService.getProduct({
-        queryValue: params,
+  // @UseGuards(JwtAuthGuard, RolesAuthGuard)
+  // @Roles([roles.ADMIN])
+  @Get()
+  async getProduct(
+    @Query('search') search?: string,
+    @Query('skip') skip?: string,
+    // @Query('limit') limit?: number,
+  ) {
+    const pageSkip: number = Number(skip);
+    return (
+      (await this.productService.getProduct({
+        queryValue: search,
         keys: 'productName',
-      });
-    }
-    return [];
+        skip: pageSkip,
+      })) || []
+    );
   }
 }

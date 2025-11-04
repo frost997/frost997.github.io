@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ProductEntity } from '../../entities/product/product.entity';
 import {
   ICreateProduct,
@@ -13,7 +13,7 @@ import { IProductFunctionParam } from './product.interface';
 import { getMongoRepositoryData } from '../../helper/util';
 
 @Injectable()
-export class ProductService implements IProductFunctionParam {
+export class ProductService implements IProductFunctionParam, OnModuleInit {
   private productRepository: MongoRepository<ProductEntity>;
   private readonly dataSource: DataSource;
 
@@ -21,7 +21,7 @@ export class ProductService implements IProductFunctionParam {
     this.dataSource = dataSource;
   } //look at this before continue
 
-  init() {
+  onModuleInit() {
     this.productRepository = getMongoRepositoryData<ProductEntity>({
       dataSource: this.dataSource,
       entity: ProductEntity, // constructor type
@@ -107,11 +107,12 @@ export class ProductService implements IProductFunctionParam {
   }
 
   async getProduct(params: IGetProducts): Promise<RProduct> {
-    const { queryValue, keys } = params;
-    const where = { [`${keys}`]: { ['$in']: [queryValue] } };
-    const currentProduct = await this.productRepository.findOne({
-      where,
-    });
-    return { data: [currentProduct], err: '' };
+    const { queryValue, keys, skip } = params;
+    const queryCondition = { where: {}, take: 20, skip: skip ?? 0 };
+    if (queryValue?.length) {
+      queryCondition.where = { [`${keys}`]: { ['$in']: [queryValue] } };
+    }
+    const currentProduct = await this.productRepository.find(queryCondition);
+    return { data: currentProduct, err: '' };
   }
 }
