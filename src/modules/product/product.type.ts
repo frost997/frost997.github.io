@@ -6,6 +6,8 @@ export type ICreateProduct = {
   imageUrl: string;
   on_hand: number;
   saleCoupon?: number;
+  brand: string;
+  categories: string;
 };
 
 export type IUpdateProduct = {

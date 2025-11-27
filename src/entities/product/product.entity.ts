@@ -35,6 +35,12 @@ export class ProductEntity {
   on_hand: number;
 
   @Column()
+  brand: string;
+
+  @Column()
+  categories: string;
+
+  @Column()
   imageURL: string;
 
   @Column()

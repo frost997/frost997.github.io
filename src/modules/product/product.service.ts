@@ -43,6 +43,8 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
           historyID: historyObjectID,
           createdAt: new Date(),
           modifiedAt: new Date(),
+          brand: product.brand,
+          categories: product.categories,
           productName: product.productName,
           price: product.price,
           on_hand: product.on_hand,
