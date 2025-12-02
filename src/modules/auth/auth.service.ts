@@ -10,6 +10,7 @@ import { LoginDto, SignUpDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -28,27 +29,47 @@ export class AuthService {
       throw new ConflictException('User with this email has already exist');
     }
 
+    // ⬇️ Check if this is the first user in the system
+    const usersCount = await this.userRepository.count();
     const hashedPassword = await bcrypt.hash(password, 12);
+
+    const roles = usersCount === 0 ? ['ADMIN'] : ['USER']; // ⭐ FIRST USER IS ADMIN
 
     const user = this.userRepository.create({
       email,
+      roles,
       password: hashedPassword,
       userName: userName,
     });
 
     await this.userRepository.save(user);
 
-    const payload = { email: user.email, sub: user._id };
-    const token = this.jwtService.sign(payload);
-    return {
-      access_token: token,
+    return this.issueTokens(user);
+  }
+
+  sendAuthCookies(res: Response, data: any) {
+    res.cookie('access_token', data.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000, // 1h
+    });
+
+    res.cookie('refresh_token', data.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+    });
+
+    return res.send({
       user: {
-        id: user._id,
-        email: user.email,
-        userName: user.userName,
-        roles: user.roles,
+        id: data.user._id,
+        email: data.user.email,
+        userName: data.user.userName,
+        roles: data.user.roles,
       },
-    };
+    });
   }
 
   async login(loginDto: LoginDto) {
@@ -66,19 +87,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate JWT token
-    const payload = { email: user.email, sub: user._id, roles: user.roles };
-    const token = this.jwtService.sign(payload);
-
-    return {
-      access_token: token,
-      user: {
-        id: user._id,
-        email: user.email,
-        userName: user.userName,
-        roles: user.roles,
-      },
-    };
+    return this.issueTokens(user);
   }
 
   async validateUser(payload: any) {
@@ -95,5 +104,57 @@ export class AuthService {
       userName: user.userName,
       roles: user.roles,
     };
+  }
+
+  async issueTokens(user: UserEntity) {
+    const payload = { sub: user._id, email: user.email };
+
+    const access = await this.jwtService.signAsync(payload, {
+      expiresIn: '1h',
+    });
+
+    const refresh = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    });
+
+    const hashedRefresh = await bcrypt.hash(refresh, 10);
+
+    await this.userRepository.update(user._id, {
+      refresh_token: hashedRefresh,
+    });
+
+    return {
+      access_token: access,
+      refresh_token: refresh,
+      user: {
+        id: user._id,
+        email: user.email,
+        userName: user.userName,
+        roles: user.roles,
+      },
+    };
+  }
+
+  async refresh(refreshToken: string) {
+    const payload = await this.jwtService.verifyAsync(refreshToken, {
+      secret: process.env.JWT_REFRESH_SECRET,
+    });
+
+    const userId = new ObjectId(payload.sub);
+    const user = await this.userRepository.findOne({
+      where: { _id: userId },
+    });
+
+    if (!user || !user.refresh_token) {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    const valid = await bcrypt.compare(refreshToken, user.refresh_token);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return this.issueTokens(user);
   }
 }

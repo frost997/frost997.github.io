@@ -17,17 +17,22 @@ export class UserEntity {
   @Column()
   roles: string[];
 
+  @Column({ nullable: true })
+  refresh_token?: string;
+
   constructor(
     _id: ObjectId,
     userName: string,
     email: string,
     password: string,
     roles: string[],
+    refresh_token: string,
   ) {
     this._id = _id;
     this.userName = userName;
     this.email = email;
     this.password = password;
     this.roles = roles;
+    this.refresh_token = refresh_token;
   }
 }
