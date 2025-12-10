@@ -41,7 +41,7 @@ export class ProductEntity {
   categories: string;
 
   @Column()
-  imageURL: string;
+  imageURL: string[];
 
   @Column()
   priceHistories: PriceHistory[];
