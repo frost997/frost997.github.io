@@ -1,85 +1,150 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Campus Store - Svelte 5 Edition
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A modern, mobile-first web application using **SvelteKit 2** with **Svelte 5** runes.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Svelte 5 Features Used
 
-## Description
+### Runes
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Rune | Purpose | Example |
+|------|---------|---------|
+| `$state` | Reactive state | `let count = $state(0)` |
+| `$derived` | Computed values | `let double = $derived(count * 2)` |
+| `$effect` | Side effects | `$effect(() => console.log(count))` |
+| `$props` | Component props | `let { name } = $props()` |
+| `$bindable` | Two-way binding | `let value = $bindable('')` |
+| `$inspect` | Debug logging | `$inspect(myState)` |
 
-## Project setup
+### Snippets (replaces slots)
 
-```bash
-$ pnpm install
+```svelte
+<!-- Parent component -->
+<Button>
+  {#snippet prefix()}
+    <Icon />
+  {/snippet}
+  Click me
+</Button>
+
+<!-- Button.svelte -->
+<script>
+  let { children, prefix } = $props();
+</script>
+
+<button>
+  {#if prefix}{@render prefix()}{/if}
+  {@render children()}
+</button>
 ```
 
-## Compile and run the project
+## 📁 Project Structure
 
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+```
+src/
+├── lib/
+│   ├── components/
+│   │   ├── shared/     # Button, Input, Card, Modal, etc.
+│   │   ├── layout/     # Header, Footer, AdminSidebar
+│   │   └── user/       # ProductCard, CategoryFilter
+│   ├── stores/         # Svelte 5 class-based stores
+│   │   ├── auth.svelte.ts
+│   │   ├── cart.svelte.ts
+│   │   ├── toast.svelte.ts
+│   │   └── ui.svelte.ts
+│   ├── services/       # API service layer
+│   ├── types/          # TypeScript definitions
+│   └── utils/          # Helper functions
+└── routes/
+    ├── (user)/         # User pages (shop, cart, history)
+    ├── admin/          # Admin dashboard
+    ├── login/
+    ├── register/
+    └── logout/
 ```
 
-## Run tests
+## 🔧 Stores with Svelte 5
 
-```bash
-# unit tests
-$ pnpm run test
+Stores are now class-based with `$state`:
 
-# e2e tests
-$ pnpm run test:e2e
+```typescript
+// src/lib/stores/auth.svelte.ts
+class AuthStore {
+  user = $state<User | null>(null);
+  isAuthenticated = $state(false);
+  isLoading = $state(true);
 
-# test coverage
-$ pnpm run test:cov
+  get isAdmin() {
+    return this.user?.role === 'admin';
+  }
+
+  async login(email: string, password: string) {
+    // ...
+  }
+}
+
+export const auth = new AuthStore();
 ```
 
-## Resources
+Usage in components:
+```svelte
+<script>
+  import { auth } from '$stores';
+</script>
 
-Check out a few resources that may come in handy when working with NestJS:
+{#if auth.isAuthenticated}
+  Welcome, {auth.user.name}!
+{/if}
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 🐛 Debugging with $inspect
 
-## Support
+```svelte
+<script>
+  let products = $state([]);
+  let filters = $state({ category: null, search: '' });
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+  // Logs to console whenever these values change
+  $inspect(products);
+  $inspect(filters);
+</script>
+```
 
-## Stay in touch
+## 🍪 Cookie-Based Authentication
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+The API service uses `credentials: 'include'` for automatic cookie handling:
 
-## License
+```typescript
+const response = await fetch(url, {
+  credentials: 'include', // Sends cookies automatically
+  headers: { 'Content-Type': 'application/json' }
+});
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 🚀 Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## 📝 Key Differences from Svelte 4
+
+| Svelte 4 | Svelte 5 |
+|----------|----------|
+| `let count = 0` | `let count = $state(0)` |
+| `$: double = count * 2` | `let double = $derived(count * 2)` |
+| `$: console.log(x)` | `$effect(() => console.log(x))` |
+| `export let name` | `let { name } = $props()` |
+| `<slot />` | `{@render children()}` |
+| `<slot name="x" />` | `{@render x?.()}` |
+| Svelte stores | Class with `$state` |
+
+## 📄 License
+
+MIT - Built for college communities with ❤️
