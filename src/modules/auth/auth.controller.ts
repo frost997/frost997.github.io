@@ -10,14 +10,14 @@ import {
 import { LoginDto, SignUpDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './JWT/JWT-AuthGuard';
-import { RolesAuthGuard } from './Roles/roles-AuthGuard';
-import { Roles } from './Roles/role.decorator';
+// import { RolesAuthGuard } from './Roles/roles-AuthGuard';
+// import { Roles } from './Roles/roles.decorator';
 import { roles } from '../../common/constant';
 import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('signUp')
   async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
@@ -31,9 +31,9 @@ export class AuthController {
     return this.authService.sendAuthCookies(res, result);
   }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('profile')
-  @Roles([roles.ADMIN])
+  // @Roles([roles.ADMIN])
   getProfile(@Request() request: any) {
     return {
       id: request.user.id,

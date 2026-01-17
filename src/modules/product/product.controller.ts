@@ -16,24 +16,24 @@ import {
   // createProductUser,
 } from './product.dto';
 import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
-import { RolesAuthGuard } from '../auth/role/roles-AuthGuard';
-import { Roles } from '../auth/role/roles.decorator';
-import { roles } from '../../common/constant';
+// import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
+// import { roles } from '../../common/constant';
+// import { Roles } from '../auth/Roles/roles.decorator';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   //
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
-  @Roles([roles.ADMIN])
+  @UseGuards(JwtAuthGuard)
+  // @Roles([roles.ADMIN])
   @Post()
   async createProduct(@Body() createProduct: createProduct[]) {
     return await this.productService.createProduct(createProduct);
   }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
-  @Roles([roles.ADMIN])
+  @UseGuards(JwtAuthGuard)
+  // @Roles([roles.ADMIN])
   @Patch(':productID')
   async updateProduct(
     @Body() updateProduct: updateProduct,

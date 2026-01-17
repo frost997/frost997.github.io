@@ -18,7 +18,7 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private userRepository: MongoRepository<UserEntity>,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async signUp(signUp: SignUpDto) {
     const { password, userName, email } = signUp;
@@ -48,14 +48,14 @@ export class AuthService {
   }
 
   sendAuthCookies(res: Response, data: any) {
-    res.cookie('access_token', data.accessToken, {
+    res.cookie('access_token', data.access_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 1000, // 1h
     });
 
-    res.cookie('refresh_token', data.refreshToken, {
+    res.cookie('refresh_token', data.refresh_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',

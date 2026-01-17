@@ -11,7 +11,7 @@ import { TransactionEntity } from './entities/user/transaction.entity';
 import { ProductUserEntity } from './entities/user/productUser.entity';
 import { DataSource } from 'typeorm';
 import { APP_GUARD } from '@nestjs/core';
-import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
+// import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
 import { CartModule } from './modules/cart/cart.module';
 
 // import { TransactionModule } from './modules/transaction/transaction.module';
@@ -44,13 +44,13 @@ import { CartModule } from './modules/cart/cart.module';
   ],
   controllers: [AppController],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: RolesAuthGuard,
-    },
+    //   {
+    //     provide: APP_GUARD,
+    //     useClass: RolesAuthGuard,
+    //   },
     AppService,
   ],
 })
 export class AppModule {
-  constructor(private dataSource: DataSource) {} // Inject DataSource if needed
+  constructor(private dataSource: DataSource) { } // Inject DataSource if needed
 }

@@ -11,14 +11,14 @@ import {
 import { UserService } from './user.service';
 import { updateUser } from './user.dto';
 import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
-import { RolesAuthGuard } from '../auth/role/roles-AuthGuard';
-import { Roles } from '../auth/Roles/role.decorator';
+// import { Roles } from '../auth/Roles/roles.decorator';
+// import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put(':userID')
   async updateUser(
     @Request() request: any,
