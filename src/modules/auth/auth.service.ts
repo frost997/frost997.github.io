@@ -64,7 +64,7 @@ export class AuthService {
 
     return res.send({
       user: {
-        id: data.user._id,
+        id: data.user.id,
         email: data.user.email,
         userName: data.user.userName,
         roles: data.user.roles,
@@ -91,7 +91,7 @@ export class AuthService {
   }
 
   async validateUser(payload: any) {
-    const objectId = new ObjectId(payload.sub);
+    const objectId = ObjectId.createFromHexString(payload.sub);
     const user: UserEntity = await this.userRepository.findOne({
       where: { _id: objectId },
     });

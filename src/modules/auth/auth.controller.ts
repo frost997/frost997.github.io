@@ -12,8 +12,11 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './JWT/JWT-AuthGuard';
 // import { RolesAuthGuard } from './Roles/roles-AuthGuard';
 // import { Roles } from './Roles/roles.decorator';
-import { roles } from '../../common/constant';
+// import { roles } from '../../common/constant';
 import { Response } from 'express';
+import { RolesAuthGuard } from './Roles/roles-AuthGuard';
+import { roles } from 'src/common/constant';
+import { Roles } from './Roles/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -31,14 +34,15 @@ export class AuthController {
     return this.authService.sendAuthCookies(res, result);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesAuthGuard)
   @Get('profile')
-  // @Roles([roles.ADMIN])
+  @Roles([roles.ADMIN])
   getProfile(@Request() request: any) {
     return {
       id: request.user.id,
       email: request.user.email,
       userName: request.user.userName,
+      roles: request.user.roles
     };
   }
 

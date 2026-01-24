@@ -117,4 +117,9 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
     const currentProduct = await this.productRepository.find(queryCondition);
     return { data: currentProduct, err: '' };
   }
+
+  async getCount(): Promise<any> {
+    const countProduct = await this.productRepository.count();
+    return countProduct
+  }
 }

@@ -16,24 +16,22 @@ import {
   // createProductUser,
 } from './product.dto';
 import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
-// import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
-// import { roles } from '../../common/constant';
-// import { Roles } from '../auth/Roles/roles.decorator';
+import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
+import { roles } from '../../common/constant';
+import { Roles } from '../auth/Roles/roles.decorator';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
-
-  //
-  @UseGuards(JwtAuthGuard)
-  // @Roles([roles.ADMIN])
+  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+  @Roles([roles.ADMIN])
   @Post()
   async createProduct(@Body() createProduct: createProduct[]) {
     return await this.productService.createProduct(createProduct);
   }
 
-  @UseGuards(JwtAuthGuard)
-  // @Roles([roles.ADMIN])
+  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+  @Roles([roles.ADMIN])
   @Patch(':productID')
   async updateProduct(
     @Body() updateProduct: updateProduct,
@@ -44,8 +42,6 @@ export class ProductController {
     ]);
   }
 
-  // @UseGuards(JwtAuthGuard, RolesAuthGuard)
-  // @Roles([roles.ADMIN])
   @Get()
   async getProduct(
     @Query('search') search?: string,
@@ -62,3 +58,4 @@ export class ProductController {
     );
   }
 }
+
