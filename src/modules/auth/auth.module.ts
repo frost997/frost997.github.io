@@ -20,4 +20,4 @@ import { JwtStrategy } from './JWT/JWT-strategy';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

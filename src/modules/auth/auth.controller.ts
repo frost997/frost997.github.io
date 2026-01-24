@@ -10,14 +10,17 @@ import {
 import { LoginDto, SignUpDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './JWT/JWT-AuthGuard';
-import { RolesAuthGuard } from './Roles/roles-AuthGuard';
-import { Roles } from './Roles/role.decorator';
-import { roles } from '../../common/constant';
+// import { RolesAuthGuard } from './Roles/roles-AuthGuard';
+// import { Roles } from './Roles/roles.decorator';
+// import { roles } from '../../common/constant';
 import { Response } from 'express';
+import { RolesAuthGuard } from './Roles/roles-AuthGuard';
+import { roles } from 'src/common/constant';
+import { Roles } from './Roles/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('signUp')
   async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
@@ -39,6 +42,7 @@ export class AuthController {
       id: request.user.id,
       email: request.user.email,
       userName: request.user.userName,
+      roles: request.user.roles
     };
   }
 

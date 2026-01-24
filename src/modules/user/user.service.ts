@@ -12,10 +12,10 @@ import { UserEntity } from '../../entities/user/user.entity';
 
 @Injectable()
 export class UserService implements IUserFunctionParam {
-  private productDataSource: MongoRepository<ProductEntity>;
-  private productUserDataSource: MongoRepository<ProductUserEntity>;
-  private transactionDataSource: MongoRepository<TransactionEntity>;
-  private userDataSource: MongoRepository<UserEntity>;
+  private productRepository: MongoRepository<ProductEntity>;
+  private productUserRepository: MongoRepository<ProductUserEntity>;
+  private transactionRepository: MongoRepository<TransactionEntity>;
+  private userRepository: MongoRepository<UserEntity>;
   private userProcessHelper: UserProcessHelper;
   private readonly dataSource: DataSource;
 
@@ -29,10 +29,10 @@ export class UserService implements IUserFunctionParam {
   init() {
     this.userProcessHelper = new UserProcessHelper(this.dataSource);
     const entity = this.userProcessHelper.getUpdateUserDataSource();
-    this.productDataSource = entity.productDataSource;
-    this.productUserDataSource = entity.productUserDataSource;
-    this.transactionDataSource = entity.transactionDataSource;
-    this.userDataSource = entity.userDataSource;
+    this.productRepository = entity.productDataSource;
+    this.productUserRepository = entity.productUserDataSource;
+    this.transactionRepository = entity.transactionDataSource;
+    this.userRepository = entity.userDataSource;
   }
 
   async updateUser(params: IUpdateUserService): Promise<RUser> {
@@ -49,8 +49,8 @@ export class UserService implements IUserFunctionParam {
     );
     const existingProducts =
       await this.userProcessHelper.validateProductAndUser({
-        userDataSource: this.userDataSource,
-        productDataSource: this.productDataSource,
+        userDataSource: this.userRepository,
+        productDataSource: this.productRepository,
         userName,
         objectUserId,
         updateProductIDs,
@@ -58,7 +58,7 @@ export class UserService implements IUserFunctionParam {
 
     const { validProductIds, exitMapPRDUser } =
       await this.userProcessHelper.prepProductAndUser({
-        productUserDataSource: this.productUserDataSource,
+        productUserDataSource: this.productUserRepository,
         objectUserId,
         updateProductIDs,
         existingProducts,
@@ -85,7 +85,7 @@ export class UserService implements IUserFunctionParam {
     }
     const promises = [];
     if (updateProducts?.length) {
-      const currentProduct = this.productUserDataSource.create(updateProducts);
+      const currentProduct = this.productUserRepository.create(updateProducts);
       promises.push({
         entity: ProductEntity,
         data: currentProduct,
@@ -95,7 +95,7 @@ export class UserService implements IUserFunctionParam {
 
     if (updateProductUsers?.length) {
       const currentProductUser =
-        this.productUserDataSource.create(updateProductUsers);
+        this.productRepository.create(updateProductUsers);
       promises.push({
         entity: ProductUserEntity,
         data: currentProductUser,
@@ -105,7 +105,7 @@ export class UserService implements IUserFunctionParam {
 
     if (updateTransaction?.length) {
       const currentUpdateTransaction =
-        this.transactionDataSource.create(updateTransaction);
+        this.transactionRepository.create(updateTransaction);
       promises.push({
         entity: TransactionEntity,
         data: currentUpdateTransaction,
@@ -122,5 +122,10 @@ export class UserService implements IUserFunctionParam {
       data: { userName, productUser: updateProductUsers },
       err: null,
     };
+  }
+
+  async getCount(): Promise<any> {
+    const countProduct = await this.userRepository.count();
+    return countProduct
   }
 }
