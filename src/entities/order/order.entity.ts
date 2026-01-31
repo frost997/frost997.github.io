@@ -20,6 +20,12 @@ export class CartEntity {
   @Column()
   items: CartItem[];
 
+  @Column()
+  status: string
+
+  @Column()
+  paymentMethod: string
+
   constructor(_id: ObjectId, userID: ObjectId, userName: string, items: CartItem[]) {
     this._id = _id;
     this.userID = userID;
