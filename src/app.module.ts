@@ -10,10 +10,11 @@ import { UserModule } from './modules/user/user.module';
 import { TransactionEntity } from './entities/user/transaction.entity';
 import { ProductUserEntity } from './entities/user/productUser.entity';
 import { DataSource } from 'typeorm';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
 import { CartModule } from './modules/cart/cart.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './modules/auth/JWT/JWT-AuthGuard';
+import { RolesAuthGuard } from './modules/auth/Roles/roles-AuthGuard';
 
 // import { TransactionModule } from './modules/transaction/transaction.module';
 
@@ -47,6 +48,14 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesAuthGuard,
+    },
   ],
 })
 export class AppModule {

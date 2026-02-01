@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import { JwtAuthGuard } from './modules/auth/JWT/JWT-AuthGuard';
 
 dotenv.config();
 
@@ -17,7 +18,6 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
-
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

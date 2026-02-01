@@ -5,36 +5,33 @@ import {
   Post,
   Request,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { LoginDto, SignUpDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './JWT/JWT-AuthGuard';
-// import { RolesAuthGuard } from './Roles/roles-AuthGuard';
-// import { Roles } from './Roles/roles.decorator';
-// import { roles } from '../../common/constant';
 import { Response } from 'express';
-import { RolesAuthGuard } from './Roles/roles-AuthGuard';
 import { roles } from 'src/common/constant';
 import { Roles } from './Roles/roles.decorator';
+import { Public } from './Roles/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
 
+  @Public()
   @Post('signUp')
   async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
     const result = await this.authService.signUp(signUpDto);
     return this.authService.sendAuthCookies(res, result);
   }
 
+  @Public()
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     const result = await this.authService.login(loginDto);
     return this.authService.sendAuthCookies(res, result);
   }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+
   @Get('profile')
   @Roles([roles.ADMIN])
   getProfile(@Request() request: any) {

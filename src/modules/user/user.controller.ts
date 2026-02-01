@@ -4,22 +4,21 @@ import {
   Get,
   Param,
   Request,
-  UseGuards,
   Put,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { updateUser } from './user.dto';
-import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
 import { Roles } from '../auth/Roles/roles.decorator';
 import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
 import { roles } from 'src/common/constant';
+import { Public } from '../auth/Roles/public.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+
   @Roles([roles.ADMIN])
   @Put(':userID')
   async updateUser(
@@ -35,7 +34,7 @@ export class UserController {
     return await this.userService.updateUser({ userName, productUser, userID });
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Get(':userID')
   getUser(@Request() request: any, @Param('userID') userID: string) {
     if (userID !== request._id) {
