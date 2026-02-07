@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
 import { DashboardController } from './dashboard.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductEntity } from 'src/entities/product/product.entity';
@@ -11,7 +10,7 @@ import { UserService } from '../user/user.service';
   imports: [
     TypeOrmModule.forFeature([ProductEntity, UserEntity]), // Register the Product entity
   ],
-  providers: [ProductService, UserService, JwtAuthGuard],
+  providers: [ProductService, UserService],
   controllers: [DashboardController],
 })
 export class DashboardModule { }

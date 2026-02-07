@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   Patch,
-  UseGuards,
   Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
@@ -15,22 +14,22 @@ import {
   updateProduct,
   // createProductUser,
 } from './product.dto';
-import { JwtAuthGuard } from '../auth/JWT/JWT-AuthGuard';
 import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
 import { roles } from '../../common/constant';
 import { Roles } from '../auth/Roles/roles.decorator';
+import { Public } from '../auth/Roles/public.decorator';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+
   @Roles([roles.ADMIN])
   @Post()
   async createProduct(@Body() createProduct: createProduct[]) {
     return await this.productService.createProduct(createProduct);
   }
 
-  @UseGuards(JwtAuthGuard, RolesAuthGuard)
+
   @Roles([roles.ADMIN])
   @Patch(':productID')
   async updateProduct(
@@ -42,6 +41,7 @@ export class ProductController {
     ]);
   }
 
+  @Public()
   @Get()
   async getProduct(
     @Query('search') search?: string,
