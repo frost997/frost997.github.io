@@ -3,7 +3,8 @@ import { ProductEntity } from '../../entities/product/product.entity';
 export type ICreateProduct = {
   productName: string;
   price: number;
-  imageUrl: string[];
+  imageURL: string[];
+  description: string
   on_hand: number;
   saleCoupon?: number;
   brand: string;
