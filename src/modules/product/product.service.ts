@@ -1,11 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ProductEntity } from '../../entities/product/product.entity';
-import {
-  ICreateProduct,
-  IGetProducts,
-  IUpdateProduct,
-  RProduct,
-} from './product.type';
+import { ICreateProduct, IGetProducts, IUpdateProduct, RProduct } from './product.type';
 import { DataSource, MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import { PriceHistory } from '../../entities/product/price-history.entity';
@@ -36,7 +31,7 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
     });
 
     if (!currentProduct.length) {
-      const insertProduct = params.map((product) => {
+      const insertProduct = params.map(product => {
         const historyObjectID = new ObjectId();
         const total_cost = product.price * product.on_hand;
         const insProd = {
@@ -45,17 +40,13 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
           modifiedAt: new Date(),
           brand: product.brand,
           categories: product.categories,
+          description: product.description,
           productName: product.productName,
           price: product.price,
           on_hand: product.on_hand,
-          imageURL: product.imageUrl,
+          imageURL: product.imageURL,
           priceHistories: [
-            new PriceHistory(
-              new Date(),
-              total_cost,
-              product.on_hand,
-              historyObjectID,
-            ),
+            new PriceHistory(new Date(), total_cost, product.on_hand, historyObjectID),
           ],
         };
         return this.productRepository.create(insProd);
@@ -96,8 +87,7 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
         currentProduct.price = Math.ceil(currentProduct.price);
         currentProduct.on_hand += params[index].on_hand;
         // const currentUpdateProduct = this.productRepository.create(params);
-        const currentUpdateProduct =
-          await this.productRepository.save(currentProduct);
+        const currentUpdateProduct = await this.productRepository.save(currentProduct);
         updateProduct.push(currentUpdateProduct);
       }
     }
@@ -120,6 +110,6 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
 
   async getCount(): Promise<any> {
     const countProduct = await this.productRepository.count();
-    return countProduct
+    return countProduct;
   }
 }

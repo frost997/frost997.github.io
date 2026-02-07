@@ -7,10 +7,13 @@ abstract class baseProduct {
   productName: string;
   @IsString()
   @IsNotEmpty()
-  imageUrl: string[];
+  imageURL: string[];
   @IsString()
   @IsNotEmpty()
   brand: string;
+  @IsString()
+  @IsNotEmpty()
+  description: string;
   @IsString()
   @IsNotEmpty()
   categories: string;
