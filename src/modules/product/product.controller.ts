@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import {
@@ -14,7 +15,6 @@ import {
   updateProduct,
   // createProductUser,
 } from './product.dto';
-import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
 import { roles } from '../../common/constant';
 import { Roles } from '../auth/Roles/roles.decorator';
 import { Public } from '../auth/Roles/public.decorator';
@@ -31,9 +31,9 @@ export class ProductController {
 
 
   @Roles([roles.ADMIN])
-  @Patch(':productID')
+  @Put(':productID')
   async updateProduct(
-    @Body() updateProduct: updateProduct,
+    @Body() updateProduct: any,
     @Param('productID') productID: string,
   ) {
     return await this.productService.updateProduct([

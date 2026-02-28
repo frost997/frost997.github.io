@@ -60,7 +60,7 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
 
   async updateProduct(params: IUpdateProduct[]): Promise<RProduct> {
     const updateProduct: ProductEntity[] = [];
-    const productID = params.map((prod: IUpdateProduct) => prod.productID);
+    const productID = params.map((prod: IUpdateProduct) => new ObjectId(prod.productID));
     const currentProducts: ProductEntity[] = await this.productRepository.find({
       where: { _id: { $in: productID } },
     });
@@ -71,6 +71,9 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
         currentProduct.createdAt = new Date();
         currentProduct.modifiedAt = new Date();
         const historyObjectID = new ObjectId();
+        currentProduct.description = params[index].description;
+        currentProduct.categories = params[index].categories;
+        currentProduct.brand = params[index].brand;
         const total_cost = params[index].price * params[index].on_hand;
         currentProduct.priceHistories.push(
           new PriceHistory(
@@ -92,6 +95,7 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
       }
     }
     if (updateProduct.length) {
+      await this.productRepository.save(updateProduct);
       return { data: updateProduct, err: '' };
     } else {
       return { data: null, err: 'Product not found' };

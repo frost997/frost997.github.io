@@ -15,6 +15,9 @@ export type IUpdateProduct = {
   productID: string;
   price: number;
   on_hand: number;
+  description: string;
+  categories: string;
+  brand: string;
   saleCoupon?: number;
 };
 
