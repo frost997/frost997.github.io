@@ -1,6 +1,5 @@
-
 import { ISearchProducts } from './product.type';
-import { IsArray, IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+// import { IsArray, IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 abstract class baseProduct {
   // @IsString()
@@ -28,9 +27,9 @@ abstract class baseProduct {
   saleCoupon?: number;
 }
 
-export class createProduct extends baseProduct { }
+export class createProduct extends baseProduct {}
 
-export class updateProduct extends baseProduct { }
+export class updateProduct extends baseProduct {}
 
 export class getProduct {
   params: ISearchProducts;

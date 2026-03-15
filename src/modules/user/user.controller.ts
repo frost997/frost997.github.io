@@ -1,23 +1,13 @@
-import {
-  Controller,
-  Body,
-  Get,
-  Param,
-  Request,
-  Put,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Controller, Body, Get, Param, Request, Put, UnauthorizedException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { updateUser } from './user.dto';
 import { Roles } from '../auth/Roles/roles.decorator';
-import { RolesAuthGuard } from '../auth/Roles/roles-AuthGuard';
 import { roles } from 'src/common/constant';
 import { Public } from '../auth/Roles/public.decorator';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
-
+  constructor(private readonly userService: UserService) {}
 
   @Roles([roles.ADMIN])
   @Put(':userID')

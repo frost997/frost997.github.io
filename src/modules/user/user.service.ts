@@ -38,44 +38,34 @@ export class UserService implements IUserFunctionParam {
   async updateUser(params: IUpdateUserService): Promise<RUser> {
     const { userName, userID, productUser } = params;
     if (!productUser?.length || !userID) {
-      throw new BadRequestException(
-        `Missing user's essential information, please check again`,
-      );
+      throw new BadRequestException(`Missing user's essential information, please check again`);
     }
     const objectUserId = new ObjectId(userID);
 
-    const updateProductIDs = productUser.map(
-      (prdUser) => new ObjectId(prdUser.productID),
-    );
-    const existingProducts =
-      await this.userProcessHelper.validateProductAndUser({
-        userDataSource: this.userRepository,
-        productDataSource: this.productRepository,
-        userName,
-        objectUserId,
-        updateProductIDs,
-      });
-
-    const { validProductIds, exitMapPRDUser } =
-      await this.userProcessHelper.prepProductAndUser({
-        productUserDataSource: this.productUserRepository,
-        objectUserId,
-        updateProductIDs,
-        existingProducts,
-      });
-
-    const {
-      updateTransaction,
-      updateProducts,
-      updateProductUsers,
-      invalidProduct,
-    } = this.userProcessHelper.createUpdateProductUser({
-      productUser,
-      validProductIds,
-      objectUserId,
+    const updateProductIDs = productUser.map(prdUser => new ObjectId(prdUser.productID));
+    const existingProducts = await this.userProcessHelper.validateProductAndUser({
+      userDataSource: this.userRepository,
+      productDataSource: this.productRepository,
       userName,
-      exitMapPRDUser,
+      objectUserId,
+      updateProductIDs,
     });
+
+    const { validProductIds, exitMapPRDUser } = await this.userProcessHelper.prepProductAndUser({
+      productUserDataSource: this.productUserRepository,
+      objectUserId,
+      updateProductIDs,
+      existingProducts,
+    });
+
+    const { updateTransaction, updateProducts, updateProductUsers, invalidProduct } =
+      this.userProcessHelper.createUpdateProductUser({
+        productUser,
+        validProductIds,
+        objectUserId,
+        userName,
+        exitMapPRDUser,
+      });
 
     if (invalidProduct?.length) {
       const errorMessage = invalidProduct.map(
@@ -94,8 +84,7 @@ export class UserService implements IUserFunctionParam {
     }
 
     if (updateProductUsers?.length) {
-      const currentProductUser =
-        this.productRepository.create(updateProductUsers);
+      const currentProductUser = this.productRepository.create(updateProductUsers);
       promises.push({
         entity: ProductUserEntity,
         data: currentProductUser,
@@ -104,8 +93,7 @@ export class UserService implements IUserFunctionParam {
     }
 
     if (updateTransaction?.length) {
-      const currentUpdateTransaction =
-        this.transactionRepository.create(updateTransaction);
+      const currentUpdateTransaction = this.transactionRepository.create(updateTransaction);
       promises.push({
         entity: TransactionEntity,
         data: currentUpdateTransaction,
@@ -126,6 +114,6 @@ export class UserService implements IUserFunctionParam {
 
   async getCount(): Promise<any> {
     const countProduct = await this.userRepository.count();
-    return countProduct
+    return countProduct;
   }
 }

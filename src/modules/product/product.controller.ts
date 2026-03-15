@@ -1,18 +1,9 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  Patch,
-  Query,
-  Put,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Query, Put, Delete } from '@nestjs/common';
 import { ProductService } from './product.service';
 import {
   createProduct,
-  getProduct,
-  updateProduct,
+  // getProduct,
+  // updateProduct,
   // createProductUser,
 } from './product.dto';
 import { roles } from '../../common/constant';
@@ -21,7 +12,7 @@ import { Public } from '../auth/Roles/public.decorator';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @Roles([roles.ADMIN])
   @Post()
@@ -29,16 +20,16 @@ export class ProductController {
     return await this.productService.createProduct(createProduct);
   }
 
-
   @Roles([roles.ADMIN])
   @Put(':productID')
-  async updateProduct(
-    @Body() updateProduct: any,
-    @Param('productID') productID: string,
-  ) {
-    return await this.productService.updateProduct([
-      { ...updateProduct, productID },
-    ]);
+  async updateProduct(@Body() updateProduct: any, @Param('productID') productID: string) {
+    return await this.productService.updateProduct([{ ...updateProduct, productID }]);
+  }
+
+  @Roles([roles.ADMIN])
+  @Delete(':productID')
+  async deleteProduct(@Param('productID') productID: string) {
+    return await this.productService.deleteProduct([{ productID }]);
   }
 
   @Public()
@@ -58,4 +49,3 @@ export class ProductController {
     );
   }
 }
-

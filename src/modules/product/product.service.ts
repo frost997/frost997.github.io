@@ -1,6 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ProductEntity } from '../../entities/product/product.entity';
-import { ICreateProduct, IGetProducts, IUpdateProduct, RProduct } from './product.type';
+import {
+  ICreateProduct,
+  IDeleteProduct,
+  IGetProducts,
+  IUpdateProduct,
+  RProduct,
+} from './product.type';
 import { DataSource, MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import { PriceHistory } from '../../entities/product/price-history.entity';
@@ -97,6 +103,19 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
     if (updateProduct.length) {
       await this.productRepository.save(updateProduct);
       return { data: updateProduct, err: '' };
+    } else {
+      return { data: null, err: 'Product not found' };
+    }
+  }
+
+  async deleteProduct(params: IDeleteProduct[]): Promise<RProduct> {
+    const productID = params.map((prod: IDeleteProduct) => new ObjectId(prod.productID));
+    const currentProducts: ProductEntity[] = await this.productRepository.find({
+      where: { _id: { $in: productID } },
+    });
+    if (currentProducts.length) {
+      await this.productRepository.remove(currentProducts);
+      return { data: currentProducts, err: '' };
     } else {
       return { data: null, err: 'Product not found' };
     }

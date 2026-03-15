@@ -15,15 +15,11 @@ export class CartEntity {
   userID: ObjectId;
 
   @Column()
-  userName: string;
-
-  @Column()
   items: CartItem[];
 
-  constructor(_id: ObjectId, userID: ObjectId, userName: string, items: CartItem[]) {
+  constructor(_id: ObjectId, userID: ObjectId, items: CartItem[]) {
     this._id = _id;
     this.userID = userID;
-    this.userName = userName;
     this.items = items;
   }
 }

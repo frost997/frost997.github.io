@@ -11,5 +11,5 @@ export class OrderService {
     this.datasource = datasource;
   }
 
-  init() { }
+  init() {}
 }
