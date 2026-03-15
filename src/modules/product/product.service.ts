@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ProductEntity } from '../../entities/product/product.entity';
 import {
   ICreateProduct,
+  IDeleteProduct,
   IGetProducts,
   IUpdateProduct,
   RProduct,
@@ -36,7 +37,7 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
     });
 
     if (!currentProduct.length) {
-      const insertProduct = params.map((product) => {
+      const insertProduct = params.map(product => {
         const historyObjectID = new ObjectId();
         const total_cost = product.price * product.on_hand;
         const insProd = {
@@ -45,17 +46,13 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
           modifiedAt: new Date(),
           brand: product.brand,
           categories: product.categories,
+          description: product.description,
           productName: product.productName,
           price: product.price,
           on_hand: product.on_hand,
-          imageURL: product.imageUrl,
+          imageURL: product.imageURL,
           priceHistories: [
-            new PriceHistory(
-              new Date(),
-              total_cost,
-              product.on_hand,
-              historyObjectID,
-            ),
+            new PriceHistory(new Date(), total_cost, product.on_hand, historyObjectID),
           ],
         };
         return this.productRepository.create(insProd);
@@ -69,7 +66,7 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
 
   async updateProduct(params: IUpdateProduct[]): Promise<RProduct> {
     const updateProduct: ProductEntity[] = [];
-    const productID = params.map((prod: IUpdateProduct) => prod.productID);
+    const productID = params.map((prod: IUpdateProduct) => new ObjectId(prod.productID));
     const currentProducts: ProductEntity[] = await this.productRepository.find({
       where: { _id: { $in: productID } },
     });
@@ -80,6 +77,9 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
         currentProduct.createdAt = new Date();
         currentProduct.modifiedAt = new Date();
         const historyObjectID = new ObjectId();
+        currentProduct.description = params[index].description;
+        currentProduct.categories = params[index].categories;
+        currentProduct.brand = params[index].brand;
         const total_cost = params[index].price * params[index].on_hand;
         currentProduct.priceHistories.push(
           new PriceHistory(
@@ -96,13 +96,26 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
         currentProduct.price = Math.ceil(currentProduct.price);
         currentProduct.on_hand += params[index].on_hand;
         // const currentUpdateProduct = this.productRepository.create(params);
-        const currentUpdateProduct =
-          await this.productRepository.save(currentProduct);
+        const currentUpdateProduct = await this.productRepository.save(currentProduct);
         updateProduct.push(currentUpdateProduct);
       }
     }
     if (updateProduct.length) {
+      await this.productRepository.save(updateProduct);
       return { data: updateProduct, err: '' };
+    } else {
+      return { data: null, err: 'Product not found' };
+    }
+  }
+
+  async deleteProduct(params: IDeleteProduct[]): Promise<RProduct> {
+    const productID = params.map((prod: IDeleteProduct) => new ObjectId(prod.productID));
+    const currentProducts: ProductEntity[] = await this.productRepository.find({
+      where: { _id: { $in: productID } },
+    });
+    if (currentProducts.length) {
+      await this.productRepository.remove(currentProducts);
+      return { data: currentProducts, err: '' };
     } else {
       return { data: null, err: 'Product not found' };
     }
@@ -116,5 +129,10 @@ export class ProductService implements IProductFunctionParam, OnModuleInit {
     }
     const currentProduct = await this.productRepository.find(queryCondition);
     return { data: currentProduct, err: '' };
+  }
+
+  async getCount(): Promise<any> {
+    const countProduct = await this.productRepository.count();
+    return countProduct;
   }
 }

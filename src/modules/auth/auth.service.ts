@@ -18,7 +18,7 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private userRepository: MongoRepository<UserEntity>,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async signUp(signUp: SignUpDto) {
     const { password, userName, email } = signUp;
@@ -48,14 +48,14 @@ export class AuthService {
   }
 
   sendAuthCookies(res: Response, data: any) {
-    res.cookie('access_token', data.accessToken, {
+    res.cookie('access_token', data.access_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 1000, // 1h
     });
 
-    res.cookie('refresh_token', data.refreshToken, {
+    res.cookie('refresh_token', data.refresh_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -64,7 +64,7 @@ export class AuthService {
 
     return res.send({
       user: {
-        id: data.user._id,
+        id: data.user.id,
         email: data.user.email,
         userName: data.user.userName,
         roles: data.user.roles,
@@ -91,7 +91,7 @@ export class AuthService {
   }
 
   async validateUser(payload: any) {
-    const objectId = new ObjectId(payload.sub);
+    const objectId = ObjectId.createFromHexString(payload.sub);
     const user: UserEntity = await this.userRepository.findOne({
       where: { _id: objectId },
     });

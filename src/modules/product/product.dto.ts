@@ -1,26 +1,29 @@
 import { ISearchProducts } from './product.type';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+// import { IsArray, IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 abstract class baseProduct {
-  @IsString()
-  @IsNotEmpty()
+  // @IsString()
+  // @IsNotEmpty()
   productName: string;
-  @IsString()
-  @IsNotEmpty()
-  imageUrl: string[];
-  @IsString()
-  @IsNotEmpty()
+  // @IsArray()
+  // @IsNotEmpty()
+  imageURL: string[];
+  // @IsString()
+  // @IsNotEmpty()
   brand: string;
-  @IsString()
-  @IsNotEmpty()
+  // @IsString()
+  // @IsNotEmpty()
+  description: string;
+  // @IsString()
+  // @IsNotEmpty()
   categories: string;
-  @IsNumber()
-  @IsNotEmpty()
+  // @IsNumber()
+  // @IsNotEmpty()
   price: number;
-  @IsNumber()
-  @IsNotEmpty()
+  // @IsNumber()
+  // @IsNotEmpty()
   on_hand: number;
-  @IsNumber()
+  // @IsNumber()
   saleCoupon?: number;
 }
 

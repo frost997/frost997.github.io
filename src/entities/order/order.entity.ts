@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class CartEntity {
+export class OrderEntity {
   @ObjectIdColumn()
   _id: ObjectId;
 
@@ -15,16 +15,26 @@ export class CartEntity {
   userID: ObjectId;
 
   @Column()
-  items: CartItem[];
+  userName: string;
 
-  constructor(_id: ObjectId, userID: ObjectId, items: CartItem[]) {
+  @Column()
+  items: OrderItem[];
+
+  @Column()
+  status: string
+
+  @Column()
+  paymentMethod: string
+
+  constructor(_id: ObjectId, userID: ObjectId, userName: string, items: OrderItem[]) {
     this._id = _id;
     this.userID = userID;
+    this.userName = userName;
     this.items = items;
   }
 }
 
-export class CartItem {
+export class OrderItem {
   productID: string;
   price: number;
   quantity: number;

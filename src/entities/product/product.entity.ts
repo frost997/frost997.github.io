@@ -41,6 +41,9 @@ export class ProductEntity {
   categories: string;
 
   @Column()
+  description: string;
+
+  @Column()
   imageURL: string[];
 
   @Column()
@@ -55,7 +58,9 @@ export class ProductEntity {
     on_hand: number,
     createdAt: Date,
     modifiedAt: Date,
+    description: string,
     productName: string,
+    categories: string,
     priceHistory: PriceHistory[],
     saleCoupon?: number,
   ) {
@@ -64,6 +69,8 @@ export class ProductEntity {
     this.on_hand = on_hand;
     this.createdAt = createdAt;
     this.modifiedAt = modifiedAt;
+    this.description = description;
+    this.categories = categories;
     this.productName = productName;
     this.priceHistories = priceHistory;
     this.saleCoupon = saleCoupon ? saleCoupon : undefined;

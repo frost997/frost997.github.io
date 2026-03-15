@@ -17,6 +17,9 @@ export class TransactionEntity {
   @ObjectIdColumn({ name: 'userID' })
   userID: ObjectId;
 
+  @ObjectIdColumn({ name: 'HistoryID' })
+  historyID: ObjectId;
+
   @Column()
   action: string;
 
@@ -38,6 +41,7 @@ export class TransactionEntity {
     _id: ObjectId,
     productID: ObjectId,
     userID: ObjectId,
+    historyID: ObjectId,
     action: string,
     productName: string,
     userName: string,
@@ -47,6 +51,7 @@ export class TransactionEntity {
     this._id = _id;
     this.productID = productID;
     this.userID = userID;
+    this.historyID = historyID;
     this.action = action;
     this.productName = productName;
     this.userName = userName;
